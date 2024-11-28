@@ -40,18 +40,11 @@ int main() {
 
     scanf("%d", &n);
 
-    if(n<0 || n>10000) return 0 ;
-
     int songs[n];
 
     for (int i = 0; i < n; i++) {
         scanf("%d", &songs[i]);
     }
-
-    for (int i = 0; i < n; i++) {
-        if(n<0 || n>1000000) return 0 ;
-    }
-
 
     quickSort(songs, 0, n - 1);
 

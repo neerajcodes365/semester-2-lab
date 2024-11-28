@@ -1,153 +1,150 @@
-#include <stdio.h>
-int top = -1;
+#include<stdio.h>
+#include<stdlib.h>
 
-struct job
-{
-    int job_id;
-    int priority;
-};
-typedef struct job job;
+typedef struct bst {
+    int key;
+    struct bst *left, *right;
+} node;
 
-void swap(job *x, job *y)
-{
-    job temp = *x;
-    *x = *y;
-    *y = temp;
-}
-void heapify(job arr[], int size, int i)
-{
-    int largest = i;
-    int l = 2 * i + 1;
-    int r = 2 * i + 2;
-
-    if (l < size && arr[l].priority < arr[largest].priority)
-        largest = l;
-
-    if (r < size && arr[r].priority < arr[largest].priority)
-        largest = r;
-
-    if (largest != i)
-    {
-        swap(&arr[i], &arr[largest]);
-        heapify(arr, size, largest);
-    }
+node* newNode(int item) {
+    node* temp = (node*)malloc(sizeof(node));
+    temp->key = item;
+    temp->left = temp->right = NULL;
+    return temp;
 }
 
-void heapsort(job arr[], int n)
-{
-    for (int i = n / 2 - 1; i >= 0; i--)
-    {
-        heapify(arr, n, i);
-    }
-
-    for (int i = n - 1; i > 0; i--)
-    {
-        swap(&arr[0], &arr[i]);
-        heapify(arr, i, 0);
-    }
+node* insert(node* node, int key) {
+    if (node == NULL) return newNode(key);
+    if (key < node->key)
+        node->left = insert(node->left, key);
+    else if (key > node->key)
+        node->right = insert(node->right, key);
+    return node;
 }
-
-void add(job arr[], int id, int p)
-{
-    top = top + 1;
-    arr[top].job_id = id;
-    arr[top].priority = p;
-    heapsort(arr, top + 1);
+node* search(node* root, int key) {
+    if (root == NULL || root->key == key)
+       return root;
+    if (root->key < key)
+       return search(root->right, key);
+    return search(root->left, key);
 }
-
-void schedule(job arr[])
-{
-    if (top == -1)
-    {
-        printf("-1");
-    }
-    else
-    {
-        swap(&arr[0], &arr[top]);
-        printf("%d\n",arr[top].job_id);
-        top--;
-        heapsort(arr, top + 1);
-    }
+node* min(node* x) {
+    node* current = x;
+    while (current && current->left != NULL)
+        current = current->left;
+    return current;
 }
-
-void next_job(job arr[])
-{
-    if (top == -1)
-    {
-        printf("-1");
-    }
-    else
-    {
-        printf("%d\n", arr[0].job_id);
-    }
-}
-void replace_priority(job arr[], int id, int np)
-{
-     int c = 0;
-    for (int i = 0; i < top + 1; i++)
-    {
-       
-        if (arr[i].job_id == id)
-        {
-            c++;
-            arr[i].priority = np;
+node* deleteNode(node* root, int key) {
+    if (root == NULL) return root;
+    if (key < root->key)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->key)
+        root->right = deleteNode(root->right, key);
+    else {
+        if (root->left == NULL) {
+            node* temp = root->right;
+            free(root);
+            return temp;
         }
+        else if (root->right == NULL) {
+            node* temp = root->left;
+            free(root);
+            return temp;
+        }
+        node* temp = min(root->right);
+        root->key = temp->key;
+        root->right = deleteNode(root->right, temp->key);
     }
-    if (c == 0)
-        printf("-1");
-     heapsort(arr, top + 1);
+    return root;
 }
 
-void display(job arr[])
-{
-    if (top == -1)
-    {
-        printf("-1");
+void kthSmallest(node* root, int k, int* count) {
+    if (root == NULL || *count >= k)
+        return;
+    kthSmallest(root->left, k, count);
+    if (++(*count) == k) {
+        printf("%d ", root->key);
+        return;
     }
-    else
-    {
-        for (int i = 0; i < top + 1; i++)
-        {
-            printf("%d ", arr[i].job_id);
-            printf("%d", arr[i].priority);
-            printf("\n");
-        }
-    }
+    kthSmallest(root->right, k, count);
 }
-int main()
-{
-    job jobs[20];
-    int id, p, np;
-    char choice;
-    do
-    {
-        scanf(" %c", &choice);
-        switch (choice)
-        {
-        case 'a':
-            scanf("%d", &id);
-            scanf("%d", &p);
-            add(jobs, id, p);
-            break;
-        case 's':
-            schedule(jobs);
-            break;
-        case 'n':
-            next_job(jobs);
-            break;
-        case 'r':
-            scanf("%d", &id);
-            scanf("%d", &np);
-            replace_priority(jobs, id, np);
-            break;
-        case 'd':
-            display(jobs);
-            break;
-        case 'e':
-            break;
-        default:
-            printf("invalid input\n");
+
+node* maximum(node* x) {
+    node* current = x;
+    while (current->right != NULL)
+        current = current->right;
+    return current;
+}
+
+node* inOrderSuccessor(node* root,node* n) {
+    if (n->right != NULL)
+        return min(n->right);
+    node* succ = NULL;
+    while (root != NULL) {
+        if (n->key < root->key) {
+            succ = root;
+            root = root->left;
         }
-    } while (choice != 'e');
+        else if (n->key > root->key)
+            root = root->right;
+        else
+           break;
+    }
+    return succ;
+}
+
+int main() {
+    node* root = NULL,*temp;
+    char c;
+    int num, k, count;
+    do {
+        scanf(" %c", &c);
+        switch(c) {
+            case 'i':
+                scanf("%d", &num);
+                root = insert(root, num);
+                break;
+            case 's':
+                scanf("%d", &num);
+                temp = search(root, num);
+                if(temp != NULL)
+                    printf("PRESENT\n");
+                else
+                    printf("NOT PRESENT\n");
+                break;
+            case 'd':
+                scanf("%d", &num);
+                temp = search(root, num);
+                if(temp != NULL)root = deleteNode(root, num);
+                else
+                    printf("NOT PRESENT in the BST\n");
+                break;
+            case 'k':
+                scanf("%d", &k);
+                count = 0;
+                kthSmallest(root, k, &count);
+                printf("\n");
+                break;
+            case 'm':
+                temp = maximum(root);
+                printf("%d\n", temp->key);
+                break;
+            case 'n':
+                scanf("%d", &num);
+                temp = search(root, num);
+                if(temp != NULL) {
+                    node* succ = inOrderSuccessor(root, temp);
+                    printf("%d\n", succ->key);
+                }
+                else
+                    printf("NOT PRESENT in the BST\n");
+                break;
+            case 'e':
+                break;
+            default:
+                printf("Invalid option\n");
+        }
+    } while(c != 'e');
     return 0;
 }
+

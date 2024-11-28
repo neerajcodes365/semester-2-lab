@@ -1,85 +1,189 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 
-struct car {
-    char name[30];
-    int mileage;
+struct node
+{
+    int data;
+    struct node *left;
+    struct node *right;
 };
-typedef struct car car;
+typedef struct node node;
 
-void swap(car *x, car *y) {
-    car temp = *x;
-    *x = *y;
-    *y = temp;
+node *newnode(int num)
+{
+    node *ptr = (node *)malloc(sizeof(node));
+    ptr->data = num;
+    ptr->left = ptr->right = NULL;
+    return ptr;
 }
 
-void heapify(car arr[], int size, int i) {
-    int largest = i;
-    int l = 2 * i + 1;
-    int r = 2 * i + 2;
+node *insertkey(node *root, int num)
+{
+    if (root == NULL)
+        return newnode(num);
 
-    if (l < size && arr[l].mileage > arr[largest].mileage)
-        largest = l;
+    if (num > root->data)
+        root->right = insertkey(root->right, num);
+    else if (num < root->data)
+        root->left = insertkey(root->left, num);
 
-    if (r < size && arr[r].mileage > arr[largest].mileage)
-        largest = r;
-
-    if (largest != i) {
-        swap(&arr[i], &arr[largest]);
-        heapify(arr, size, largest);
-    }
+    return root;
 }
 
-
-void heapsort(car arr[], int n) {
-    for (int i = n / 2 - 1; i >= 0; i--) {
-        heapify(arr, n, i);
-    }
-
-    for (int i = n - 1; i > 0; i--) {
-        swap(&arr[0], &arr[i]);
-        heapify(arr, i, 0);
-    }
-}
-
-int main() {
-    int n;
-    scanf("%d", &n);
-    if (n < 1 || n > 1000) return 0;
-
-    car cars[n];
-
-    for (int i = 0; i < n; i++) {
-        char input[100];
-       scanf(" %[^\n]", input); 
-
-       
-        int len = strlen(input);
-        int j = len - 1;
-
-        
-        char mileage_str[10];
-        while (j >= 0 && input[j] >= '0' && input[j] <= '9') {
-            mileage_str[len - 1 - j] = input[j];
-            j--;
+void searchkey(node *root, int num)
+{
+    node *ptr = root;
+    while (ptr != NULL)
+    {
+        if (ptr->data == num)
+        {
+            printf("PRESENT\n");
+            return;
         }
-        mileage_str[len - j] = '\0';
+        if (ptr->data > num)
+            ptr = ptr->left;
+        else
+            ptr = ptr->right;
+    }
+    printf("NOT PRESENT\n");
+}
 
-       
-        strrev(mileage_str);
-        cars[i].mileage = atoi(mileage_str);
+node *minValue(node *root)
+{
+    node *ptr = root;
+    while (ptr != NULL && ptr->left != NULL)
+    {
+        ptr = ptr->left;
+    }
+    return ptr;
+}
 
-      
-        strncpy(cars[i].name, input, j + 1);
-        cars[i].name[j + 1] = '\0';
+node *deletekey(node *root, int num)
+{
+    if (root == NULL)
+    {
+        printf("NOT PRESENT\n");
+        return root;
     }
 
-    heapsort(cars, n);
+    if (num < root->data)
+        root->left = deletekey(root->left, num);
+    else if (num > root->data)
+        root->right = deletekey(root->right, num);
+    else
+    {
+        if (root->left == NULL)
+        {
+            node *temp = root->right;
+            free(root);
+            return temp;
+        }
+        else if (root->right == NULL)
+        {
+            node *temp = root->left;
+            free(root);
+            return temp;
+        }
 
-    for (int i = n - 1; i >= 0; i--) {
-        printf("%s %d\n", cars[i].name, cars[i].mileage);
+        node *temp = minValue(root->right);
+        root->data = temp->data;
+        root->right = deletekey(root->right, temp->data);
     }
+    return root;
+}
+
+void inorder(node *root)
+{
+    if (root != NULL)
+    {
+        inorder(root->left);
+        printf("%d ", root->data);
+        inorder(root->right);
+    }
+}
+
+void preorder(node *root)
+{
+    if (root != NULL)
+    {
+        printf("%d ", root->data);
+        preorder(root->left);
+        preorder(root->right);
+    }
+}
+
+void postorder(node *root)
+{
+    if (root != NULL)
+    {
+        postorder(root->left);
+        postorder(root->right);
+        printf("%d ", root->data);
+    }
+}
+
+int main()
+{
+    int num;
+    char choice;
+    node *root = NULL;
+    do
+    {
+        scanf(" %c", &choice);
+        switch (choice)
+        {
+        case 'i':
+            scanf("%d", &num);
+            root = insertkey(root, num);
+            break;
+        case 's':
+            scanf("%d", &num);
+            searchkey(root, num);
+            break;
+        case 'd':
+            scanf("%d", &num);
+            root = deletekey(root, num);
+            break;
+        case 'p':
+            if (root == NULL)
+            {
+                printf("NULL\n");
+                break;
+            }
+            else
+            {
+                inorder(root);
+                printf("\n");
+                break;
+            }
+        case 't':
+            if (root == NULL)
+            {
+                printf("NULL\n");
+                break;
+            }
+            else
+            {
+                preorder(root);
+                printf("\n");
+                break;
+            }
+        case 'b':
+            if (root == NULL)
+            {
+                printf("NULL\n");
+                break;
+            }
+            else
+            {
+                postorder(root);
+                printf("\n");
+                break;
+            }
+        case 'e':
+            break;
+        }
+    } while (choice != 'e');
 
     return 0;
 }
